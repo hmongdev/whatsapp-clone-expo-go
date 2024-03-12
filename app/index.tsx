@@ -33,7 +33,8 @@ export default function WelcomeScreen() {
 				</Text>
 				.
 			</Text>
-			<Link href={'/otp'} replace asChild>
+			{/* `replace asChild` removes the header back button */}
+			<Link href="/otp" replace asChild>
 				<TouchableOpacity className="w-full items-center rounded-full py-4 bg-gray-200">
 					<Text className="text-md font-semibold">
 						Agree & Continue
