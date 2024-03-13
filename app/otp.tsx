@@ -10,8 +10,6 @@ import {
 	TouchableOpacity,
 	View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-const { bottom } = useSafeAreaInsets();
 
 export default function Page() {
 	const [loading, setLoading] = useState(false);
@@ -62,8 +60,8 @@ export default function Page() {
 					disabled={phoneNumber === ''}
 					className={
 						phoneNumber !== ''
-							? `w-full items-center bg-blue-500 rounded-lg py-3 ${bottom}`
-							: `w-full items-center bg-gray-300 rounded-lg py-3 ${bottom}`
+							? `w-full items-center bg-blue-500 rounded-lg py-3`
+							: `w-full items-center bg-gray-300 rounded-lg py-3`
 					}
 					onPress={sendOTP}>
 					<Text className="text-lg font-semibold">
