@@ -10,7 +10,7 @@ export default function WelcomeScreen() {
 	};
 
 	return (
-		<View className="flex h-screen justify-center items-center p-20">
+		<View className="flex h-screen bg-white justify-center items-center p-20">
 			<Image
 				source={{ uri: welcome_image }}
 				className="w-full h-[300] rounded-2xl"
@@ -35,7 +35,7 @@ export default function WelcomeScreen() {
 			</Text>
 			{/* `replace asChild` removes the header back button */}
 			<Link href="/otp" replace asChild>
-				<TouchableOpacity className="w-full items-center rounded-full py-4 bg-gray-200">
+				<TouchableOpacity className="w-full items-center rounded-full py-4 bg-lightGray">
 					<Text className="text-md font-semibold">
 						Agree & Continue
 					</Text>

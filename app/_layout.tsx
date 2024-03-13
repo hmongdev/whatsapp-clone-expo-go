@@ -1,7 +1,34 @@
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
-import React from 'react';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
 
-export default function RootLayoutNav() {
+export {
+	// Catch any errors thrown by the Layout component.
+	ErrorBoundary,
+} from 'expo-router';
+
+// Prevent the splash screen from auto-hiding before asset loading is complete.
+SplashScreen.preventAutoHideAsync();
+
+const InitialLayout = () => {
+	const [loaded, error] = useFonts({
+		SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+		...FontAwesome.font,
+	});
+
+	// Expo Router uses Error Boundaries to catch errors in the navigation tree.
+	useEffect(() => {
+		if (error) throw error;
+	}, [error]);
+
+	useEffect(() => {
+		if (loaded) {
+			SplashScreen.hideAsync();
+		}
+	}, [loaded]);
+
 	return (
 		<Stack>
 			<Stack.Screen
@@ -9,12 +36,30 @@ export default function RootLayoutNav() {
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen
-				name="inotpdex"
+				name="otp"
 				options={{
 					headerTitle: 'Enter Your Phone Number',
 					headerBackVisible: false,
 				}}
 			/>
+			<Stack.Screen
+				name="verify/[phone]"
+				options={{
+					title: 'Verify Phone Number',
+					headerShown: true,
+					headerBackTitle: 'Edit number',
+				}}
+			/>
+			<Stack.Screen
+				name="(tabs)"
+				options={{ headerShown: false }}
+			/>
 		</Stack>
 	);
-}
+};
+
+const RootLayoutNav = () => {
+	return <InitialLayout />;
+};
+
+export default RootLayoutNav;
