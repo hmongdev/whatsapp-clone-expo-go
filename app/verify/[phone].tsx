@@ -1,7 +1,12 @@
+import {
+	isClerkAPIResponseError,
+	useSignIn,
+	useSignUp,
+} from '@clerk/clerk-expo';
 import clsx from 'clsx';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import {
 	CodeField,
@@ -26,6 +31,9 @@ export default function Page() {
 		setValue: setCode,
 	});
 
+	const { signUp, setActive } = useSignUp();
+	const { signIn } = useSignIn();
+
 	// useEffect that checks the code
 	useEffect(() => {
 		if (code.length === 6) {
@@ -40,11 +48,75 @@ export default function Page() {
 		}
 	}, [code]);
 
-	const verifyCode = async () => {};
+	// verifies OTP code
+	const verifyCode = async () => {
+		try {
+			await signUp!.attemptPhoneNumberVerification({
+				code,
+			});
 
-	const verifySignIn = async () => {};
+			await setActive!({ session: signUp!.createdSessionId });
+		} catch (err) {
+			console.log('error', JSON.stringify(err, null, 2));
+			if (isClerkAPIResponseError(err)) {
+				Alert.alert('Error', err.errors[0].message);
+			}
+		}
+	};
 
-	const resendCode = async () => {};
+	const verifySignIn = async () => {
+		try {
+			await signIn!.attemptFirstFactor({
+				strategy: 'phone_code',
+				code,
+			});
+
+			await setActive!({ session: signIn!.createdSessionId });
+		} catch (err) {
+			console.log('error', JSON.stringify(err, null, 2));
+			if (isClerkAPIResponseError(err)) {
+				Alert.alert('Error', err.errors[0].message);
+			}
+		}
+	};
+
+	const resendCode = async () => {
+		try {
+			if (signin === 'true') {
+				const { supportedFirstFactors } =
+					await signIn!.create({
+						identifier: phone,
+					});
+
+				const firstPhoneFactor: any =
+					supportedFirstFactors.find(
+						(factor: any) => {
+							return (
+								factor.strategy ===
+								'phone_code'
+							);
+						}
+					);
+
+				const { phoneNumberId } = firstPhoneFactor;
+
+				await signIn!.prepareFirstFactor({
+					strategy: 'phone_code',
+					phoneNumberId,
+				});
+			} else {
+				await signUp!.create({
+					phoneNumber: phone,
+				});
+				signUp!.preparePhoneNumberVerification();
+			}
+		} catch (err) {
+			console.log('error', JSON.stringify(err, null, 2));
+			if (isClerkAPIResponseError(err)) {
+				Alert.alert('Error', err.errors[0].message);
+			}
+		}
+	};
 
 	return (
 		<View className="flex grow items-center gap-20 p-8 pt-48 bg-white">

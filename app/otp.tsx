@@ -1,9 +1,15 @@
 // page for verifying phone number
+import {
+	isClerkAPIResponseError,
+	useSignIn,
+	useSignUp,
+} from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
 	ActivityIndicator,
+	Alert,
 	KeyboardAvoidingView,
 	Linking,
 	Platform,
@@ -34,25 +40,76 @@ const USA_PHONE = [
 ];
 
 export default function Page() {
-	const [phoneNumber, setPhoneNumber] = useState('');
-	const keyboardVerticalOffset = Platform.OS === 'ios' ? 90 : 0;
-	const router = useRouter();
 	const [loading, setLoading] = useState(false);
+	const [phoneNumber, setPhoneNumber] = useState('');
+	const router = useRouter();
+	const keyboardVerticalOffset = Platform.OS === 'ios' ? 90 : 0;
+	const { signUp, setActive } = useSignUp();
+	const { signIn } = useSignIn();
 
 	const openLink = () => {
 		Linking.openURL('https://galaxies.dev');
 	};
 
+	// if new user => send OTP code to user
 	const sendOTP = async () => {
+		console.log('sendOTP', phoneNumber);
 		setLoading(true);
-		setTimeout(() => {
-			setLoading(!loading);
+		try {
+			await signUp!.create({
+				phoneNumber,
+			});
+			signUp!.preparePhoneNumberVerification();
+
 			router.push(`/verify/${phoneNumber}`);
-		}, 2000);
-		setLoading(!loading);
+		} catch (err) {
+			console.log('Error', JSON.stringify(err, null, 2));
+
+			if (isClerkAPIResponseError(err)) {
+				if (
+					err.errors[0].code ===
+					'form_identifier_exists'
+				) {
+					// User signed up before
+					console.log(
+						'User account already created'
+					);
+					await trySignIn();
+				} else {
+					setLoading(false);
+					Alert.alert(
+						'Error',
+						err.errors[0].message
+					);
+				}
+			}
+		}
 	};
 
-	const trySignIn = async () => {};
+	// if user is already created
+	const trySignIn = async () => {
+		console.log('trySignIn', phoneNumber);
+
+		const { supportedFirstFactors } = await signIn!.create({
+			identifier: phoneNumber,
+		});
+
+		const firstPhoneFactor: any = supportedFirstFactors.find(
+			(factor: any) => {
+				return factor.strategy === 'phone_code';
+			}
+		);
+
+		const { phoneNumberId } = firstPhoneFactor;
+
+		await signIn!.prepareFirstFactor({
+			strategy: 'phone_code',
+			phoneNumberId,
+		});
+
+		router.push(`/verify/${phoneNumber}?signin=true`);
+		setLoading(false);
+	};
 
 	return (
 		<KeyboardAvoidingView
